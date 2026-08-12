@@ -1,0 +1,4 @@
+package com.university.erp.attendance.dto;
+
+public class AttendanceRequest {
+}
