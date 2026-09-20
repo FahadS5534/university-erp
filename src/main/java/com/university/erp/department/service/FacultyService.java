@@ -104,8 +104,44 @@ public class FacultyService {
         Faculty faculty = facultyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Faculty not found: " + id));
+        
+                        if(faculty.getDepartment() != null && faculty.getDepartment().getHod() != null && faculty.getDepartment().getHod().getFacultyId().equals(id)){
+                            throw new IllegalStateException("Cannot delete faculty because they are assigned as HOD");
+                            }
 
         facultyRepository.delete(faculty);
+    }
+
+    public List<FacultyResponse> searchByName(String Keyword) {
+        return facultyRepository
+                .searchByNameWithDepartment(Keyword )
+                .stream()
+                .map(facultyMapper::toResponse)
+                .toList();
+    }
+
+    public List<FacultyResponse> searchByDesignation(String designation) {
+        return facultyRepository
+                .searchByDesignationWithDepartment(designation)
+                .stream()
+                .map(facultyMapper::toResponse)
+                .toList();
+    }
+
+    public List<FacultyResponse> searchBySpecialization(String specialization) {
+        return facultyRepository
+                .searchBySpecializationWithDepartment(specialization)
+                .stream()
+                .map(facultyMapper::toResponse)
+                .toList();
+    }
+
+    public List<FacultyResponse> getByDepartment(Integer departmentId) {
+        return facultyRepository
+                .findByDepartmentWithDepartment(departmentId)
+                .stream()
+                .map(facultyMapper::toResponse)
+                .toList();
     }
 
     private void copyRequestToEntity(

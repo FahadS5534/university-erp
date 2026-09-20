@@ -25,17 +25,58 @@ public interface FacultyRepository extends JpaRepository<Faculty, Integer> {
     List<Faculty> findBySpecializationContainingIgnoreCase(String specialization);
 
     @Query("""
-        SELECT f
-        FROM Faculty f
-        JOIN FETCH f.department
-        """)
+            SELECT f
+            FROM Faculty f
+            JOIN FETCH f.department
+            """)
     List<Faculty> findAllWithDepartment();
 
     @Query("""
-        SELECT f
-        FROM Faculty f
-        JOIN FETCH f.department
-        WHERE f.facultyId = :id
-        """)
+            SELECT f
+            FROM Faculty f
+            JOIN FETCH f.department
+            WHERE f.facultyId = :id
+            """)
     Optional<Faculty> findByIdWithDepartment(@Param("id") Integer id);
+
+    @Query("""
+            SELECT f
+            FROM Faculty f
+            JOIN FETCH f.department
+            WHERE LOWER(f.designation)
+            LIKE LOWER(CONCAT('%', :designation, '%'))
+            """)
+    List<Faculty> searchByDesignationWithDepartment(
+            @Param("designation") String designation);
+
+    @Query("""
+            SELECT f
+            FROM Faculty f
+            JOIN FETCH f.department
+            WHERE LOWER(f.specialization)
+            LIKE LOWER(CONCAT('%', :specialization, '%'))
+            """)
+    List<Faculty> searchBySpecializationWithDepartment(
+            @Param("specialization") String specialization);
+
+    @Query("""
+            SELECT f
+            FROM Faculty f
+            JOIN FETCH f.department
+            WHERE LOWER(f.firstName)
+            LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(f.lastName)
+            LIKE LOWER(CONCAT('%', :keyword, '%'))
+            """)
+    List<Faculty> searchByNameWithDepartment(
+            @Param("keyword") String keyword);
+
+    @Query("""
+            SELECT f
+            FROM Faculty f
+            JOIN FETCH f.department
+            WHERE f.department.departmentId = :departmentId
+            """)
+    List<Faculty> findByDepartmentWithDepartment(
+            @Param("departmentId") Integer departmentId);
 }

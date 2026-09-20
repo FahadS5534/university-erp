@@ -35,6 +35,34 @@ public class FacultyController {
         return facultyService.getById(id);
     }
 
+    @GetMapping("/search/name")
+    public List<FacultyResponse> searchByName(
+            @RequestParam String keyword) {
+
+        return facultyService.searchByName(keyword);
+    }
+
+    @GetMapping("/search/designation")
+    public List<FacultyResponse> searchByDesignation(
+            @RequestParam String value) {
+
+        return facultyService.searchByDesignation(value);
+    }
+
+    @GetMapping("/search/specialization")
+    public List<FacultyResponse> searchBySpecialization(
+            @RequestParam String value) {
+
+        return facultyService.searchBySpecialization(value);
+    }
+
+    @GetMapping("/department/{departmentId}")
+    public List<FacultyResponse> getByDepartment(
+            @PathVariable Integer departmentId) {
+
+        return facultyService.getByDepartment(departmentId);
+    }
+
     @PutMapping("/{id}")
     public FacultyResponse update(
             @PathVariable Integer id,
@@ -48,4 +76,3 @@ public class FacultyController {
         facultyService.delete(id);
     }
 }
-

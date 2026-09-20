@@ -19,8 +19,8 @@ public class DepartmentService {
     private final FacultyRepository facultyRepository;
 
     public DepartmentService(DepartmentRepository departmentRepository,
-                             DepartmentMapper departmentMapper,
-                             FacultyRepository facultyRepository) {
+            DepartmentMapper departmentMapper,
+            FacultyRepository facultyRepository) {
         this.departmentRepository = departmentRepository;
         this.departmentMapper = departmentMapper;
         this.facultyRepository = facultyRepository;
@@ -34,8 +34,7 @@ public class DepartmentService {
         Department department = departmentMapper.toEntity(request);
 
         return departmentMapper.toResponse(
-                departmentRepository.save(department)
-        );
+                departmentRepository.save(department));
     }
 
     public List<DepartmentResponse> getAll() {
@@ -47,16 +46,14 @@ public class DepartmentService {
 
     public DepartmentResponse getById(Integer id) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Department not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
 
         return departmentMapper.toResponse(department);
     }
 
     public DepartmentResponse update(Integer id, DepartmentRequest request) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Department not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
 
         if (!department.getDepartmentName()
                 .equalsIgnoreCase(request.departmentName())
@@ -64,30 +61,59 @@ public class DepartmentService {
                         .existsByDepartmentNameIgnoreCase(request.departmentName())) {
 
             throw new IllegalArgumentException(
-                    "Department name already exists"
-            );
+                    "Department name already exists");
         }
 
         department.setDepartmentName(request.departmentName());
         department.setLocation(request.location());
 
         return departmentMapper.toResponse(
-                departmentRepository.save(department)
-        );
+                departmentRepository.save(department));
     }
 
     public void delete(Integer id) {
 
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Department not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
 
         if (facultyRepository.existsByDepartmentDepartmentId(id)) {
             throw new IllegalStateException(
-                    "Cannot delete department while faculties are assigned to it"
-            );
+                    "Cannot delete department while faculties are assigned to it");
         }
 
         departmentRepository.delete(department);
+    }
+
+    public DepartmentResponse assignHod(Integer departmentId, Integer facultyId) {
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + departmentId));
+
+        var faculty = facultyRepository.findById(facultyId)
+                .orElseThrow(() -> new RuntimeException("Faculty not found: " + facultyId));
+
+        if (!faculty.getDepartment().getDepartmentId().equals(departmentId)) {
+            throw new IllegalArgumentException("Faculty does not belong to the selected department");
+        }
+
+        department.setHod(faculty);
+
+        return departmentMapper.toResponse(departmentRepository.save(department));
+    }
+
+    public DepartmentResponse getHod(Integer departmentId) {
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + departmentId));
+
+        return departmentMapper.toResponse(department);
+    }
+
+    public DepartmentResponse removeHod(Integer departmentId) {
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new RuntimeException("Department not found " + departmentId));
+
+        department.setHod(null);
+
+        return departmentMapper.toResponse(departmentRepository.save(department));
+
     }
 }
