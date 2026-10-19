@@ -47,4 +47,26 @@ public class DepartmentController {
     public void delete(@PathVariable Integer id) {
         departmentService.delete(id);
     }
+
+    @PutMapping("/{departmentId}/hod/{facultyId}")
+    public DepartmentResponse assignHod(
+        @PathVariable Integer departmentId,
+        @PathVariable Integer facultyId){
+
+            return  departmentService.assignHod(departmentId, facultyId);
+        }
+
+    @GetMapping ("/{departmentId}/hod")
+    public DepartmentResponse getHod(
+        @PathVariable Integer departmentId){
+
+            return departmentService.getHod(departmentId);
+        }
+    
+    @DeleteMapping ("/{departmentId}/hod")
+    public DepartmentResponse removeHod(
+        @PathVariable Integer departmentId){
+
+            return departmentService.removeHod(departmentId);
+        }
 }
