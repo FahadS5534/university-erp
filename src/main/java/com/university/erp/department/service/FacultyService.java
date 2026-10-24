@@ -3,6 +3,7 @@ package com.university.erp.department.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.university.erp.department.dto.FacultyRequest;
 import com.university.erp.department.dto.FacultyResponse;
@@ -77,9 +78,7 @@ public class FacultyService {
 
         if (!faculty.getEmail().equalsIgnoreCase(request.email())
                 && facultyRepository.existsByEmailIgnoreCase(request.email())) {
-
-            throw new IllegalArgumentException(
-                    "Faculty email already exists");
+            throw new IllegalArgumentException("Faculty email already exists");
         }
 
         Department department = departmentRepository.findById(request.departmentId())
@@ -99,22 +98,23 @@ public class FacultyService {
         return facultyMapper.toResponse(updatedFaculty);
     }
 
+    @Transactional
     public void delete(Integer id) {
 
         Faculty faculty = facultyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Faculty not found: " + id));
-        
-                        if(faculty.getDepartment() != null && faculty.getDepartment().getHod() != null && faculty.getDepartment().getHod().getFacultyId().equals(id)){
-                            throw new IllegalStateException("Cannot delete faculty because they are assigned as HOD");
-                            }
+
+        if (faculty.getDepartment() != null && faculty.getDepartment().getHod() != null && faculty.getDepartment().getHod().getFacultyId().equals(id)) {
+            throw new IllegalStateException("Cannot delete faculty because they are assigned as HOD");
+        }
 
         facultyRepository.delete(faculty);
     }
 
     public List<FacultyResponse> searchByName(String Keyword) {
         return facultyRepository
-                .searchByNameWithDepartment(Keyword )
+                .searchByNameWithDepartment(Keyword)
                 .stream()
                 .map(facultyMapper::toResponse)
                 .toList();
