@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,6 +64,13 @@ public class Enrollment {
 	public void setEnrollmentId(UUID enrollmentId) { this.enrollmentId = enrollmentId; }
 	public Student getStudent() { return student; }
 	public void setStudent(Student student) { this.student = student; }
+	@Transient
+	public String getStudentName() {
+		if (student == null) return null;
+		return java.util.stream.Stream.of(student.getFirstName(), student.getMiddleName(), student.getLastName())
+				.filter(name -> name != null && !name.isBlank())
+				.collect(java.util.stream.Collectors.joining(" "));
+	}
 	public Integer getSemester() { return semester; }
 	public void setSemester(Integer semester) { this.semester = semester; }
 	public String getAcademicYear() { return academicYear; }

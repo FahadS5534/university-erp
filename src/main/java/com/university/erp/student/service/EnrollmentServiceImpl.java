@@ -9,12 +9,17 @@ import com.university.erp.student.repository.EnrollmentRepository;
 import com.university.erp.student.repository.StudentRepository;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EnrollmentServiceImpl implements EnrollmentService {
+    private static final Logger logger = LoggerFactory.getLogger(EnrollmentServiceImpl.class);
+
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
 
@@ -24,49 +29,75 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EnrollmentResponse> findAll() {
-        return enrollmentRepository.findAll().stream().map(EnrollmentMapper::toResponse).toList();
+        List<EnrollmentResponse> enrollments = enrollmentRepository.findAll().stream()
+                .map(EnrollmentMapper::toResponse).toList();
+        logger.info("Listed {} enrollments", enrollments.size());
+        return enrollments;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EnrollmentResponse> findByStudentId(UUID studentId) {
         getStudent(studentId);
-        return enrollmentRepository.findByStudentStudentId(studentId).stream()
+        List<EnrollmentResponse> enrollments = enrollmentRepository.findByStudentStudentId(studentId).stream()
                 .map(EnrollmentMapper::toResponse).toList();
+        logger.info("Listed {} enrollments for student {}", enrollments.size(), studentId);
+        return enrollments;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EnrollmentResponse findById(UUID enrollmentId) {
-        return EnrollmentMapper.toResponse(getEnrollment(enrollmentId));
+        EnrollmentResponse enrollment = EnrollmentMapper.toResponse(getEnrollment(enrollmentId));
+        logger.info("Retrieved enrollment {}", enrollmentId);
+        return enrollment;
     }
 
     @Override
     public EnrollmentResponse create(EnrollmentRequest request) {
-        return EnrollmentMapper.toResponse(
-                enrollmentRepository.save(EnrollmentMapper.toEntity(request, getStudent(request.studentId()))));
+        Enrollment enrollment = enrollmentRepository.save(
+                EnrollmentMapper.toEntity(request, getStudent(request.studentId())));
+        logger.info("Created enrollment {} for student {}", enrollment.getEnrollmentId(), request.studentId());
+        return EnrollmentMapper.toResponse(enrollment);
     }
 
     @Override
     public EnrollmentResponse update(UUID enrollmentId, EnrollmentRequest request) {
-        Enrollment enrollment = getEnrollment(enrollmentId);
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId).orElse(null);
+        if (enrollment == null) {
+            logger.warn("Cannot update enrollment {} because it does not exist", enrollmentId);
+            return null;
+        }
         Student student = getStudent(request.studentId());
-        Enrollment replacement = EnrollmentMapper.toEntity(request, student);
-        replacement.setEnrollmentId(enrollment.getEnrollmentId());
-        return EnrollmentMapper.toResponse(enrollmentRepository.save(replacement));
+        EnrollmentMapper.updateEntity(enrollment, request, student);
+        Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
+        logger.info("Updated enrollment {}", enrollmentId);
+        return EnrollmentMapper.toResponse(updatedEnrollment);
     }
 
     @Override
     public void delete(UUID enrollmentId) {
         enrollmentRepository.delete(getEnrollment(enrollmentId));
+        logger.info("Deleted enrollment {}", enrollmentId);
     }
 
     private Enrollment getEnrollment(UUID enrollmentId) {
         return enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Enrollment {} was not found", enrollmentId);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Enrollment not found: " + enrollmentId);
+                });
     }
 
     private Student getStudent(UUID studentId) {
         return studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Student {} was not found", studentId);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Student not found: " + studentId);
+                });
     }
 }

@@ -10,6 +10,11 @@ public final class EnrollmentMapper {
 
 	public static Enrollment toEntity(EnrollmentRequest request, Student student) {
 		Enrollment enrollment = new Enrollment();
+		updateEntity(enrollment, request, student);
+		return enrollment;
+	}
+
+	public static void updateEntity(Enrollment enrollment, EnrollmentRequest request, Student student) {
 		enrollment.setStudent(student);
 		enrollment.setSemester(request.semester());
 		enrollment.setAcademicYear(request.academicYear());
@@ -21,11 +26,11 @@ public final class EnrollmentMapper {
 		enrollment.setEndDate(request.endDate());
 		enrollment.setExitReason(request.exitReason());
 		enrollment.setFinalCgpa(request.finalCgpa());
-		return enrollment;
 	}
 
 	public static EnrollmentResponse toResponse(Enrollment enrollment) {
 		return new EnrollmentResponse(enrollment.getEnrollmentId(), enrollment.getStudent().getStudentId(),
+				enrollment.getStudentName(),
 				enrollment.getSemester(), enrollment.getAcademicYear(), enrollment.getRollNo(),
 				enrollment.getDivision(), enrollment.getAdmissionType(), enrollment.getEnrollmentStatus(),
 				enrollment.getStartDate(), enrollment.getEndDate(), enrollment.getExitReason(),
