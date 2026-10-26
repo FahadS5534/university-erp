@@ -42,6 +42,18 @@ STATUS SUMMARY
 - Meaning: one student can have many enrollments, each with a different semester, academic year, division, or roll number.
 - This is the integration pattern other modules should follow when connecting to the student and enrollment flow.
 
+CURRENT EXPLANATION OF THE STUDENT AND ENROLLMENT FLOW
+- The Student entity represents the main student profile and identity record.
+- A student has a unique studentId (currently UUID), plus personal details like enrollmentNo, name, email, dob, address, admissionDate, and currentStatus.
+- The enrollmentNo field is the student registration number used in the app, such as 1002026.
+- The Enrollment entity represents a student's academic registration for a specific term or academic year.
+- Each enrollment belongs to exactly one Student and stores semester, academicYear, rollNo, division, admissionType, enrollmentStatus, and date range information.
+- So the relationship is: one Student can have many Enrollment records, while each Enrollment points back to one Student.
+- In practical use, we first create a Student record, then create an Enrollment record using that student's returned UUID.
+- This is the correct data flow for the project today: Student record = person profile, Enrollment record = academic record for that student.
+- The custom year-based numeric scheme like 1002026 and 20261000 is a planned ID style, but the actual code currently uses UUIDs and must be refactored if that format is required.
+- The connection to Supabase works the same way as local PostgreSQL as long as the datasource values are supplied through environment variables and the app starts with the correct pooler URL.
+
 4B. How to integrate with the student and enrollment modules
 1. Create a student first through POST /api/students.
 2. Copy the returned studentId UUID.
