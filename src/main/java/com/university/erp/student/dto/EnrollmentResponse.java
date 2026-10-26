@@ -7,6 +7,7 @@ import java.util.UUID;
 public record EnrollmentResponse(
 	UUID enrollmentId,
 	UUID studentId,
+	String studentName,
 	Integer semester,
 	String academicYear,
 	Integer rollNo,
