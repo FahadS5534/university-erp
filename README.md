@@ -45,19 +45,24 @@ Set the database password before starting the application.
 PowerShell:
 
 ```powershell
-$env:POSTGRES_PASSWORD = "your-postgres-password"
-$env:POSTGRES_USERNAME = "postgres" # optional; this is the default
+$env:SPRING_DATASOURCE_PASSWORD = "your-postgres-password"
+$env:SPRING_DATASOURCE_USERNAME = "postgres" # optional; this is the default
 ```
 
 The standard datasource configuration is:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/erp
-spring.datasource.username=${POSTGRES_USERNAME:postgres}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/erp}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:postgres}
 spring.datasource.password=${POSTGRES_PASSWORD}
 ```
 
 Hibernate is configured with `spring.jpa.hibernate.ddl-auto=update`. It maintains tables mapped by the application and creates the library tables, which were present in the original source scaffold but not in the supplied schema. For production deployments, use versioned database migrations (for example, Flyway) and change this setting to `validate`.
+
+The student and enrollment entities are mapped to the PostgreSQL `student` and
+`enrollment` tables. On startup, Hibernate creates or updates these tables,
+including the enrollment-to-student foreign key. This happens only after the
+application successfully connects to the `erp` database.
 
 ## Run the application
 
@@ -72,7 +77,13 @@ mvn -DskipTests compile
 mvn spring-boot:run
 ```
 
-The API listens on `http://localhost:8080` by default.
+The API listens on `http://localhost:8081` by default.
+
+Swagger UI is available at `http://localhost:8081/swagger-ui/index.html`. The
+`students-enrollments` OpenAPI group contains only the student and enrollment
+endpoints and can be opened directly at
+`http://localhost:8081/swagger-ui/index.html?urls.primaryName=students-enrollments`.
+Its OpenAPI document is available at `http://localhost:8081/v3/api-docs/students-enrollments`.
 
 ## Standard CRUD endpoints
 
