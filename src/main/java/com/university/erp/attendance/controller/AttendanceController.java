@@ -169,4 +169,40 @@ public class AttendanceController {
             @Parameter(description = "Optional division filter (e.g. A, B)") @RequestParam(required = false) String division) {
         return service.getDefaulters(threshold, subjectId, division);
     }
+
+    @Operation(summary = "Get monthly attendance calendar", description = "Returns full day-by-day attendance calendar for a student and specified calendar month, including lecture details, statuses, and monthly totals.")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Monthly calendar successfully retrieved"),
+            @ApiResponse(responseCode = "400", description = "Invalid year or month specified"),
+            @ApiResponse(responseCode = "404", description = "Student not found") })
+    @GetMapping("/calendar/{studentId}")
+    public ResponseEntity<MonthlyAttendanceCalendarResponse> getMonthlyCalendar(
+            @Parameter(description = "Student UUID") @PathVariable UUID studentId,
+            @Parameter(description = "Calendar year (e.g. 2026)") @RequestParam int year,
+            @Parameter(description = "Calendar month number (1-12)") @RequestParam int month) {
+        return ResponseEntity.ok(service.getMonthlyCalendar(studentId, year, month));
+    }
+
+    @Operation(summary = "Get monthly attendance summary", description = "Calculates monthly attendance totals, status counts, percentage, and active days for a student in a specified month.")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Monthly summary successfully retrieved"),
+            @ApiResponse(responseCode = "400", description = "Invalid year or month specified"),
+            @ApiResponse(responseCode = "404", description = "Student not found") })
+    @GetMapping("/calendar/{studentId}/summary")
+    public ResponseEntity<MonthlyAttendanceSummaryResponse> getMonthlySummary(
+            @Parameter(description = "Student UUID") @PathVariable UUID studentId,
+            @Parameter(description = "Calendar year (e.g. 2026)") @RequestParam int year,
+            @Parameter(description = "Calendar month number (1-12)") @RequestParam int month) {
+        return ResponseEntity.ok(service.getMonthlySummary(studentId, year, month));
+    }
+
+    @Operation(summary = "Get subject-wise attendance trends", description = "Analyzes subject-wise attendance metrics and chronological monthly trend breakdowns for a student over the requested date range.")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Attendance trends report successfully retrieved"),
+            @ApiResponse(responseCode = "400", description = "Invalid date range or missing required date parameters"),
+            @ApiResponse(responseCode = "404", description = "Student not found") })
+    @GetMapping("/calendar/{studentId}/trends")
+    public ResponseEntity<AttendanceTrendsResponse> getAttendanceTrends(
+            @Parameter(description = "Student UUID") @PathVariable UUID studentId,
+            @Parameter(description = "Start date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "End date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(service.getAttendanceTrends(studentId, startDate, endDate));
+    }
 }
