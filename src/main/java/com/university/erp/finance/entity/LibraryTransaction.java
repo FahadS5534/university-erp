@@ -16,13 +16,13 @@ public class LibraryTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+    @Column(name = "book_id", nullable = false)
     private Long bookId;
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id", insertable = false, updatable = false)
     private LibraryBook book;
-    @Column(nullable = false)
+    @Column(name = "student_id", nullable = false)
     private UUID studentId;
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
