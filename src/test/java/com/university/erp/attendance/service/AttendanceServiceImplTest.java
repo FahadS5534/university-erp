@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -477,5 +478,228 @@ class AttendanceServiceImplTest {
         List<AttendanceDefaulterResponse> defaulters = attendanceService.getDefaulters(75.0, null, "B");
 
         assertTrue(defaulters.isEmpty());
+    }
+
+    @Test
+    void testGetMonthlyCalendar_Success_MultipleLecturesPerDay() {
+        when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
+
+        LocalDate date15 = LocalDate.of(2026, 10, 15);
+        LocalDate date16 = LocalDate.of(2026, 10, 16);
+
+        Lecture l1 = new Lecture();
+        l1.setId(101L);
+        l1.setSubjectId(501L);
+        l1.setLectureDate(date15);
+        l1.setStartTime(LocalTime.of(9, 0));
+
+        Attendance a1 = new Attendance();
+        a1.setLectureId(101L);
+        a1.setStudentId(sampleStudentId);
+        a1.setStatus(AttendanceStatus.Present);
+        a1.setMarkedAt(LocalDateTime.of(2026, 10, 15, 9, 5));
+
+        Lecture l2 = new Lecture();
+        l2.setId(102L);
+        l2.setSubjectId(502L);
+        l2.setLectureDate(date15);
+        l2.setStartTime(LocalTime.of(11, 0));
+
+        Attendance a2 = new Attendance();
+        a2.setLectureId(102L);
+        a2.setStudentId(sampleStudentId);
+        a2.setStatus(AttendanceStatus.Absent);
+        a2.setMarkedAt(LocalDateTime.of(2026, 10, 15, 11, 5));
+
+        Lecture l3 = new Lecture();
+        l3.setId(103L);
+        l3.setSubjectId(501L);
+        l3.setLectureDate(date16);
+        l3.setStartTime(LocalTime.of(10, 0));
+
+        Attendance a3 = new Attendance();
+        a3.setLectureId(103L);
+        a3.setStudentId(sampleStudentId);
+        a3.setStatus(AttendanceStatus.C_WORK);
+        a3.setMarkedAt(LocalDateTime.of(2026, 10, 16, 10, 5));
+
+        List<Object[]> records = List.of(
+                new Object[]{a1, l1},
+                new Object[]{a2, l2},
+                new Object[]{a3, l3}
+        );
+
+        when(attendanceRepository.findMonthlyAttendanceRecords(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
+                .thenReturn(records);
+
+        Subject s1 = Subject.builder().id(501L).subjectCode("CS101").subjectName("Data Structures").build();
+        Subject s2 = Subject.builder().id(502L).subjectCode("CS102").subjectName("Algorithms").build();
+        when(subjectRepository.findAllById(anySet())).thenReturn(List.of(s1, s2));
+
+        MonthlyAttendanceCalendarResponse calendar = attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 10);
+
+        assertNotNull(calendar);
+        assertEquals(sampleStudentId, calendar.studentId());
+        assertEquals("Alice Smith", calendar.studentName());
+        assertEquals("EN1001", calendar.enrollmentNo());
+        assertEquals(2026, calendar.year());
+        assertEquals(10, calendar.month());
+        assertEquals("OCTOBER", calendar.monthName());
+        assertEquals(31, calendar.totalDaysInMonth());
+        assertEquals(2, calendar.activeAttendanceDays());
+        assertEquals(31, calendar.days().size());
+
+        CalendarDayAttendance day15 = calendar.days().get(14);
+        assertEquals(date15, day15.date());
+        assertEquals(2, day15.entries().size());
+        assertEquals("Data Structures", day15.entries().get(0).subjectName());
+        assertEquals(AttendanceStatus.Present, day15.entries().get(0).status());
+        assertEquals("Algorithms", day15.entries().get(1).subjectName());
+        assertEquals(AttendanceStatus.Absent, day15.entries().get(1).status());
+
+        CalendarDayAttendance day16 = calendar.days().get(15);
+        assertEquals(date16, day16.date());
+        assertEquals(1, day16.entries().size());
+        assertEquals(AttendanceStatus.C_WORK, day16.entries().get(0).status());
+
+        // Empty day check (e.g., Oct 1st)
+        CalendarDayAttendance day1 = calendar.days().get(0);
+        assertTrue(day1.entries().isEmpty());
+
+        // Summary check: 3 marked, 1 present, 1 absent, 1 c_work -> (1 + 1) / 3 * 100 = 66.67%
+        assertEquals(3L, calendar.totalLectures());
+        assertEquals(1L, calendar.presentCount());
+        assertEquals(1L, calendar.absentCount());
+        assertEquals(1L, calendar.cWorkCount());
+        assertEquals(66.67, calendar.attendancePercentage());
+    }
+
+    @Test
+    void testGetMonthlyCalendar_EmptyMonth() {
+        when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
+        when(attendanceRepository.findMonthlyAttendanceRecords(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
+                .thenReturn(Collections.emptyList());
+
+        MonthlyAttendanceCalendarResponse calendar = attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 10);
+
+        assertNotNull(calendar);
+        assertEquals(31, calendar.days().size());
+        assertEquals(0, calendar.activeAttendanceDays());
+        assertEquals(0L, calendar.totalLectures());
+        assertEquals(0.0, calendar.attendancePercentage());
+    }
+
+    @Test
+    void testGetMonthlyCalendar_StudentNotFound() {
+        when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 10));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Student not found"));
+    }
+
+    @Test
+    void testGetMonthlyCalendar_InvalidMonth() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 13));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    void testGetMonthlyCalendar_InvalidYear() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> attendanceService.getMonthlyCalendar(sampleStudentId, 1899, 10));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    void testGetMonthlySummary_Success() {
+        when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
+
+        Object[] aggRow = new Object[]{10L, 8L, 1L, 1L, 6L};
+        when(attendanceRepository.getMonthlySummaryAggregation(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
+                .thenReturn(Collections.singletonList(aggRow));
+
+        MonthlyAttendanceSummaryResponse summary = attendanceService.getMonthlySummary(sampleStudentId, 2026, 10);
+
+        assertNotNull(summary);
+        assertEquals(10L, summary.totalMarkedLectures());
+        assertEquals(8L, summary.presentCount());
+        assertEquals(1L, summary.absentCount());
+        assertEquals(1L, summary.cWorkCount());
+        assertEquals(90.0, summary.attendancePercentage());
+        assertEquals(6, summary.daysWithAttendance());
+    }
+
+    @Test
+    void testGetMonthlySummary_ZeroRecords() {
+        when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
+
+        Object[] emptyRow = new Object[]{0L, null, null, null, 0L};
+        when(attendanceRepository.getMonthlySummaryAggregation(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
+                .thenReturn(Collections.singletonList(emptyRow));
+
+        MonthlyAttendanceSummaryResponse summary = attendanceService.getMonthlySummary(sampleStudentId, 2026, 10);
+
+        assertNotNull(summary);
+        assertEquals(0L, summary.totalMarkedLectures());
+        assertEquals(0L, summary.presentCount());
+        assertEquals(0L, summary.absentCount());
+        assertEquals(0L, summary.cWorkCount());
+        assertEquals(0.0, summary.attendancePercentage());
+        assertEquals(0, summary.daysWithAttendance());
+    }
+
+    @Test
+    void testGetAttendanceTrends_Success_SpanningMonths() {
+        when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
+
+        LocalDate startDate = LocalDate.of(2026, 8, 1);
+        LocalDate endDate = LocalDate.of(2026, 10, 31);
+
+        Object[] subj1 = new Object[]{101L, 20L, 18L, 2L, 0L};
+        Object[] subj2 = new Object[]{102L, 10L, 7L, 2L, 1L};
+        when(attendanceRepository.getSubjectTrendsAggregation(sampleStudentId, startDate, endDate))
+                .thenReturn(List.of(subj1, subj2));
+
+        Object[] m1 = new Object[]{101L, 2026, 8, 10L, 9L, 1L, 0L};
+        Object[] m2 = new Object[]{101L, 2026, 9, 10L, 9L, 1L, 0L};
+        when(attendanceRepository.getSubjectMonthlyTrendsAggregation(sampleStudentId, startDate, endDate))
+                .thenReturn(List.of(m1, m2));
+
+        Subject s1 = Subject.builder().id(101L).subjectCode("MATH101").subjectName("Calculus").build();
+        Subject s2 = Subject.builder().id(102L).subjectCode("PHY101").subjectName("Physics").build();
+        when(subjectRepository.findAllById(anySet())).thenReturn(List.of(s1, s2));
+
+        AttendanceTrendsResponse trends = attendanceService.getAttendanceTrends(sampleStudentId, startDate, endDate);
+
+        assertNotNull(trends);
+        assertEquals(sampleStudentId, trends.studentId());
+        assertEquals("Alice Smith", trends.studentName());
+        assertEquals("EN1001", trends.enrollmentNo());
+        assertEquals(startDate, trends.startDate());
+        assertEquals(endDate, trends.endDate());
+        assertEquals(30L, trends.overallTotalLectures());
+        assertEquals(26L, trends.overallAttendedLectures());
+        assertEquals(86.67, trends.overallPercentage());
+
+        assertEquals(2, trends.subjects().size());
+        SubjectAttendanceTrend trend1 = trends.subjects().get(0);
+        assertEquals("Calculus", trend1.subjectName());
+        assertEquals(90.0, trend1.attendancePercentage());
+        assertEquals(2, trend1.monthlyBreakdown().size());
+        assertEquals(90.0, trend1.monthlyBreakdown().get(0).percentage());
+    }
+
+    @Test
+    void testGetAttendanceTrends_InvalidDateRange() {
+        LocalDate startDate = LocalDate.of(2026, 10, 31);
+        LocalDate endDate = LocalDate.of(2026, 8, 1);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> attendanceService.getAttendanceTrends(sampleStudentId, startDate, endDate));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("cannot be after"));
     }
 }

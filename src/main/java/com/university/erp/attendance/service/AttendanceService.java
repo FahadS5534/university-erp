@@ -39,4 +39,10 @@ public interface AttendanceService {
             LocalDate endDate);
 
     List<AttendanceDefaulterResponse> getDefaulters(Double threshold, Long subjectId, String division);
+
+    MonthlyAttendanceCalendarResponse getMonthlyCalendar(UUID studentId, int year, int month);
+
+    MonthlyAttendanceSummaryResponse getMonthlySummary(UUID studentId, int year, int month);
+
+    AttendanceTrendsResponse getAttendanceTrends(UUID studentId, LocalDate startDate, LocalDate endDate);
 }
