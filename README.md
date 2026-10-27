@@ -134,12 +134,16 @@ Base path: `/api/attendance`
 | Purpose | Method | Endpoint |
 | --- | --- | --- |
 | Mark one record | `POST` | `/api/attendance` |
-| List/filter records | `GET` | `/api/attendance` |
+| List/filter records (supports pagination) | `GET` | `/api/attendance` |
 | Read one record | `GET` | `/api/attendance/{id}` |
 | Update a record | `PUT` | `/api/attendance/{id}` |
 | Delete a record | `DELETE` | `/api/attendance/{id}` |
 | Mark a class in one request | `POST` | `/api/attendance/bulk` |
 | Student attendance summary | `GET` | `/api/attendance/summary/{studentId}` |
+| Subject-wise student summary | `GET` | `/api/attendance/summary/{studentId}/subjects` |
+| Lecture attendance register | `GET` | `/api/attendance/lecture/{lectureId}/register` |
+| Student attendance history | `GET` | `/api/attendance/student/{studentId}/history` |
+| Attendance defaulters report | `GET` | `/api/attendance/defaulters` |
 
 ### Mark attendance
 
@@ -161,18 +165,25 @@ Valid API status values are `Present`, `Absent`, and `C_WORK`. `C_WORK` is persi
 Attendance rules:
 
 - `lectureId`, `studentId`, and `status` are required.
+- Referenced lecture and student must exist, and student must have an active enrollment.
 - Only one attendance record can exist for a student in a lecture.
 - A duplicate single-record request returns `409 Conflict`.
 - Batch requests reject duplicate student/lecture combinations in the submitted list.
-- Re-marking an existing item through the batch endpoint updates the existing attendance record.
-- Summary percentage counts `Present` and `C_WORK` as attended sessions.
+- Re-marking an existing item through the batch endpoint updates the existing attendance record atomically.
+- Summary percentage counts `Present` and `C_WORK` as attended sessions:
+  `Attendance Percentage = (Attended Lectures / Total Eligible Conducted Lectures) * 100`
 
-### Filter attendance
+### Filter and paginate attendance
 
 ```http
+# Filter by lecture and status
 GET /api/attendance?lectureId=1&status=Present
-GET /api/attendance?studentId=8e8ef61b-5621-4c6f-9daa-89c029092e4c
-GET /api/attendance?lectureId=1&studentId=8e8ef61b-5621-4c6f-9daa-89c029092e4c
+
+# Filter by student, subject, division, and date range
+GET /api/attendance?studentId=8e8ef61b-5621-4c6f-9daa-89c029092e4c&subjectId=10&division=A&startDate=2026-10-01&endDate=2026-10-31
+
+# Paginated list
+GET /api/attendance?page=0&size=20&sort=id,desc
 ```
 
 ### Mark a lecture in bulk
@@ -216,6 +227,216 @@ Example response:
   "percentage": 83.33
 }
 ```
+
+### Subject-wise attendance breakdown
+
+```http
+GET /api/attendance/summary/8e8ef61b-5621-4c6f-9daa-89c029092e4c/subjects
+```
+
+### Lecture attendance register
+
+```http
+GET /api/attendance/lecture/1/register
+```
+
+### Student attendance history
+
+```http
+GET /api/attendance/student/8e8ef61b-5621-4c6f-9daa-89c029092e4c/history?subjectId=10&startDate=2026-10-01&endDate=2026-10-31
+```
+
+### Attendance defaulters list
+
+```http
+GET /api/attendance/defaulters?threshold=75.0&division=A
+```
+
+## Attendance Calendar & Trends
+
+The Attendance Management module provides student-facing and faculty analytics endpoints for calendar views, monthly summaries, and longitudinal subject-wise trends.
+
+### 1. Monthly Attendance Calendar
+
+Retrieves full day-by-day attendance records for a specified student and calendar month. Every day of the month is represented, containing either lecture attendance sessions or an empty day representation. Multiple lectures on the same date are grouped chronologically.
+
+```http
+GET /api/attendance/calendar/{studentId}?year=2026&month=10
+```
+
+Example response:
+
+```json
+{
+  "studentId": "8e8ef61b-5621-4c6f-9daa-89c029092e4c",
+  "studentName": "Alice Smith",
+  "enrollmentNo": "EN1001",
+  "year": 2026,
+  "month": 10,
+  "monthName": "OCTOBER",
+  "totalDaysInMonth": 31,
+  "activeAttendanceDays": 15,
+  "totalLectures": 30,
+  "presentCount": 25,
+  "absentCount": 3,
+  "cWorkCount": 2,
+  "attendancePercentage": 90.0,
+  "days": [
+    {
+      "date": "2026-10-01",
+      "dayOfMonth": 1,
+      "dayOfWeek": "THURSDAY",
+      "totalLectures": 0,
+      "presentCount": 0,
+      "absentCount": 0,
+      "cWorkCount": 0,
+      "entries": []
+    },
+    {
+      "date": "2026-10-05",
+      "dayOfMonth": 5,
+      "dayOfWeek": "MONDAY",
+      "totalLectures": 2,
+      "presentCount": 1,
+      "absentCount": 0,
+      "cWorkCount": 1,
+      "entries": [
+        {
+          "attendanceId": 101,
+          "lectureId": 1,
+          "lectureDate": "2026-10-05",
+          "startTime": "09:00:00",
+          "endTime": "10:00:00",
+          "subjectId": 10,
+          "subjectCode": "CS101",
+          "subjectName": "Data Structures",
+          "status": "Present",
+          "remarks": "On time",
+          "markedAt": "2026-10-05T09:05:00",
+          "markedBy": "prof@university.edu"
+        },
+        {
+          "attendanceId": 102,
+          "lectureId": 2,
+          "lectureDate": "2026-10-05",
+          "startTime": "11:00:00",
+          "endTime": "12:00:00",
+          "subjectId": 20,
+          "subjectCode": "MATH101",
+          "subjectName": "Discrete Mathematics",
+          "status": "C_WORK",
+          "remarks": "NSS Volunteering",
+          "markedAt": "2026-10-05T11:05:00",
+          "markedBy": "prof@university.edu"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 2. Monthly Attendance Summary
+
+Calculates aggregated monthly counts and attendance percentage using single-pass database aggregation.
+
+```http
+GET /api/attendance/calendar/{studentId}/summary?year=2026&month=10
+```
+
+Example response:
+
+```json
+{
+  "studentId": "8e8ef61b-5621-4c6f-9daa-89c029092e4c",
+  "studentName": "Alice Smith",
+  "enrollmentNo": "EN1001",
+  "year": 2026,
+  "month": 10,
+  "monthName": "OCTOBER",
+  "totalMarkedLectures": 30,
+  "presentCount": 25,
+  "absentCount": 3,
+  "cWorkCount": 2,
+  "attendancePercentage": 90.0,
+  "daysWithAttendance": 15
+}
+```
+
+### 3. Subject-wise Attendance Trends
+
+Calculates attendance statistics and monthly breakdowns grouped by subject across an arbitrary date range (spanning across month and year boundaries).
+
+```http
+GET /api/attendance/calendar/{studentId}/trends?startDate=2026-08-01&endDate=2026-10-31
+```
+
+Example response:
+
+```json
+{
+  "studentId": "8e8ef61b-5621-4c6f-9daa-89c029092e4c",
+  "studentName": "Alice Smith",
+  "enrollmentNo": "EN1001",
+  "startDate": "2026-08-01",
+  "endDate": "2026-10-31",
+  "overallTotalLectures": 60,
+  "overallAttendedLectures": 54,
+  "overallPercentage": 90.0,
+  "subjects": [
+    {
+      "subjectId": 10,
+      "subjectCode": "CS101",
+      "subjectName": "Data Structures",
+      "totalLectures": 30,
+      "presentCount": 25,
+      "absentCount": 3,
+      "cWorkCount": 2,
+      "attendancePercentage": 90.0,
+      "monthlyBreakdown": [
+        {
+          "year": 2026,
+          "month": 8,
+          "monthName": "AUGUST",
+          "totalLectures": 10,
+          "presentCount": 8,
+          "absentCount": 1,
+          "cWorkCount": 1,
+          "percentage": 90.0
+        },
+        {
+          "year": 2026,
+          "month": 9,
+          "monthName": "SEPTEMBER",
+          "totalLectures": 10,
+          "presentCount": 9,
+          "absentCount": 1,
+          "cWorkCount": 0,
+          "percentage": 90.0
+        },
+        {
+          "year": 2026,
+          "month": 10,
+          "monthName": "OCTOBER",
+          "totalLectures": 10,
+          "presentCount": 8,
+          "absentCount": 1,
+          "cWorkCount": 1,
+          "percentage": 90.0
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Business Rules & Calculation Details
+
+- **Supported Statuses:** `Present`, `Absent`, and `C_WORK` (College Work).
+- **Percentage Formula:**
+  $$\text{Percentage} = \frac{\text{Present} + \text{C\_WORK}}{\text{Total Marked Lectures}} \times 100$$
+  Rounded to 2 decimal places. When total lectures is 0, the percentage returns `0.0` safely.
+- **Lecture Date vs Record Creation Date:** Records are filtered strictly on scheduled lecture date (`Lecture.lectureDate`), NOT the database record creation or timestamp (`Attendance.markedAt`). Cancelled lectures (`status = 'Cancelled'`) are excluded.
+- **Authorization Limitation Note:** The current repository does not have Spring Security or JWT authentication infrastructure configured. Client-supplied student IDs are validated for existence in the database. When security is enabled, endpoints should verify that the authenticated principal matches the requested student ID or holds authorized faculty/administrative roles.
 
 ## HTTP error behavior
 
