@@ -1,6 +1,5 @@
 package com.university.erp.student.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -58,7 +57,7 @@ public class Student {
 	@Column(name = "updated_at", insertable = false)
 	private LocalDateTime updatedAt;
 
-	@OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
 	private List<Enrollment> enrollments = new ArrayList<>();
 
 	public UUID getStudentId() { return studentId; }

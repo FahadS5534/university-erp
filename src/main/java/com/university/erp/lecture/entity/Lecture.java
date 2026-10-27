@@ -1,6 +1,10 @@
 package com.university.erp.lecture.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.university.erp.course.entity.Subject;
+import com.university.erp.department.entity.Faculty;
+import com.university.erp.classroom.entity.Classroom;
 import lombok.*;
 import java.time.*;
 
@@ -16,10 +20,22 @@ public class Lecture {
     private Long id;
     @Column(name = "subject_id", nullable = false)
     private Long subjectId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "subject_id", insertable = false, updatable = false)
+    private Subject subject;
     @Column(name = "faculty_id", nullable = false)
     private Integer facultyId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "faculty_id", insertable = false, updatable = false)
+    private Faculty faculty;
     @Column(name = "classroom_id")
-    private Long classroomId;
+    private Integer classroomId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "classroom_id", insertable = false, updatable = false)
+    private Classroom classroom;
     @Column(name = "lecture_date", nullable = false)
     private LocalDate lectureDate;
     @Column(name = "start_time", nullable = false)

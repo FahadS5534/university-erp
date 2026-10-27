@@ -59,8 +59,10 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public void delete(UUID studentId) {
-        studentRepository.delete(getStudent(studentId));
-        logger.info("Deleted student {}", studentId);
+        Student student = getStudent(studentId);
+        student.setCurrentStatus("Inactive");
+        studentRepository.save(student);
+        logger.info("Marked student {} as inactive", studentId);
     }
 
     private Student getStudent(UUID studentId) {

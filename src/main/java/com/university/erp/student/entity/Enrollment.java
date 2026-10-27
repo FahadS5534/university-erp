@@ -55,6 +55,7 @@ public class Enrollment {
 	@Column(name = "exit_reason")
 	private String exitReason;
 
+	@Column(name = "final_cgpa", precision = 3, scale = 2)
 	private BigDecimal finalCgpa;
 
 	@Column(name = "created_at", insertable = false, updatable = false)

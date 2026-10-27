@@ -1,6 +1,8 @@
 package com.university.erp.examination.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.university.erp.student.entity.Student;
 import lombok.*;
 import java.math.*;
 import java.time.*;
@@ -18,12 +20,20 @@ public class Grade {
     private Long id;
     @Column(name = "exam_id", nullable = false)
     private Long examId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "exam_id", insertable = false, updatable = false)
+    private Examination examination;
     @Column(name = "student_id", nullable = false)
     private UUID studentId;
-    @Column(name = "marks_obtained", nullable = false)
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private Student student;
+    @Column(name = "marks_obtained", nullable = false, precision = 7, scale = 2)
     private BigDecimal marksObtained;
     private String grade;
-    @Column(name = "grade_point")
+    @Column(name = "grade_point", precision = 4, scale = 2)
     private BigDecimal gradePoint;
     @Column(name = "result_status", nullable = false)
     private String resultStatus = "PASS";

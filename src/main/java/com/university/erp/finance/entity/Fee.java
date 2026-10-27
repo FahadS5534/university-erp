@@ -15,7 +15,7 @@ public class Fee {
     private Long id;
     @Column(nullable = false, unique = true)
     private String feeType;
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
     private String description;
     private boolean active = true;

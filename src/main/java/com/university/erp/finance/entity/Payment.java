@@ -1,6 +1,8 @@
 package com.university.erp.finance.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.university.erp.student.entity.Student;
 import lombok.*;
 import java.math.*;
 import java.time.*;
@@ -18,13 +20,17 @@ public class Payment {
     private UUID id;
     @Column(name = "student_id", nullable = false)
     private UUID studentId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private Student student;
     @Column(name = "fee_type", nullable = false)
     private String feeType;
-    @Column(name = "total_amount", nullable = false)
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
-    @Column(name = "paid_amount")
+    @Column(name = "paid_amount", precision = 12, scale = 2)
     private BigDecimal paidAmount = BigDecimal.ZERO;
-    @Column(name = "due_amount")
+    @Column(name = "due_amount", precision = 12, scale = 2)
     private BigDecimal dueAmount;
     @Column(name = "payment_status")
     private String paymentStatus = "PENDING";

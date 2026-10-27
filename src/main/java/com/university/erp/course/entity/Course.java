@@ -1,6 +1,8 @@
 package com.university.erp.course.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.university.erp.department.entity.Department;
 import lombok.*;
 
 @Entity
@@ -30,4 +32,9 @@ public class Course {
 
     @Column(name = "department_id")
     private Integer departmentId;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", insertable = false, updatable = false)
+    private Department department;
 }

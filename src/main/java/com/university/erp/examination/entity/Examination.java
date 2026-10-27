@@ -1,6 +1,8 @@
 package com.university.erp.examination.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.university.erp.course.entity.Subject;
 import lombok.*;
 import java.math.*;
 import java.time.*;
@@ -17,13 +19,17 @@ public class Examination {
     private Long id;
     @Column(name = "subject_id", nullable = false)
     private Long subjectId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "subject_id", insertable = false, updatable = false)
+    private Subject subject;
     @Column(name = "academic_year", nullable = false)
     private String academicYear = "2026-2027";
     @Column(nullable = false)
     private Short semester;
     @Column(name = "exam_type", nullable = false)
     private String examType;
-    @Column(name = "max_marks", nullable = false)
+    @Column(name = "max_marks", nullable = false, precision = 7, scale = 2)
     private BigDecimal maxMarks;
     @Column(name = "exam_date")
     private LocalDate examDate;

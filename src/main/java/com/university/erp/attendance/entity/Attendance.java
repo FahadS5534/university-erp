@@ -1,6 +1,9 @@
 package com.university.erp.attendance.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.university.erp.lecture.entity.Lecture;
+import com.university.erp.student.entity.Student;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -14,8 +17,16 @@ public class Attendance {
     private Long id;
     @Column(name = "lecture_id", nullable = false)
     private Long lectureId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "lecture_id", insertable = false, updatable = false)
+    private Lecture lecture;
     @Column(name = "student_id", nullable = false)
     private UUID studentId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private Student student;
     @Convert(converter = AttendanceStatusConverter.class)
     @Column(nullable = false)
     private AttendanceStatus status;

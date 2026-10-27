@@ -14,8 +14,6 @@ public class Classroom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "classroom_id")
     private Integer id;
-    @Column(name = "timetable_id")
-    private Long timetableId;
     @Column(name = "room_number", nullable = false, unique = true)
     private Integer roomNumber;
     @Column(name = "floor_number", nullable = false)

@@ -11,7 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
@@ -30,8 +30,8 @@ public class Department {
     @Column(name = "location", length = 100)
     private String location;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hod_faculty_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hod_faculty_id", unique = true)
     private Faculty hod;
 
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
