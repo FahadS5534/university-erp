@@ -134,12 +134,16 @@ Base path: `/api/attendance`
 | Purpose | Method | Endpoint |
 | --- | --- | --- |
 | Mark one record | `POST` | `/api/attendance` |
-| List/filter records | `GET` | `/api/attendance` |
+| List/filter records (supports pagination) | `GET` | `/api/attendance` |
 | Read one record | `GET` | `/api/attendance/{id}` |
 | Update a record | `PUT` | `/api/attendance/{id}` |
 | Delete a record | `DELETE` | `/api/attendance/{id}` |
 | Mark a class in one request | `POST` | `/api/attendance/bulk` |
 | Student attendance summary | `GET` | `/api/attendance/summary/{studentId}` |
+| Subject-wise student summary | `GET` | `/api/attendance/summary/{studentId}/subjects` |
+| Lecture attendance register | `GET` | `/api/attendance/lecture/{lectureId}/register` |
+| Student attendance history | `GET` | `/api/attendance/student/{studentId}/history` |
+| Attendance defaulters report | `GET` | `/api/attendance/defaulters` |
 
 ### Mark attendance
 
@@ -161,18 +165,25 @@ Valid API status values are `Present`, `Absent`, and `C_WORK`. `C_WORK` is persi
 Attendance rules:
 
 - `lectureId`, `studentId`, and `status` are required.
+- Referenced lecture and student must exist, and student must have an active enrollment.
 - Only one attendance record can exist for a student in a lecture.
 - A duplicate single-record request returns `409 Conflict`.
 - Batch requests reject duplicate student/lecture combinations in the submitted list.
-- Re-marking an existing item through the batch endpoint updates the existing attendance record.
-- Summary percentage counts `Present` and `C_WORK` as attended sessions.
+- Re-marking an existing item through the batch endpoint updates the existing attendance record atomically.
+- Summary percentage counts `Present` and `C_WORK` as attended sessions:
+  `Attendance Percentage = (Attended Lectures / Total Eligible Conducted Lectures) * 100`
 
-### Filter attendance
+### Filter and paginate attendance
 
 ```http
+# Filter by lecture and status
 GET /api/attendance?lectureId=1&status=Present
-GET /api/attendance?studentId=8e8ef61b-5621-4c6f-9daa-89c029092e4c
-GET /api/attendance?lectureId=1&studentId=8e8ef61b-5621-4c6f-9daa-89c029092e4c
+
+# Filter by student, subject, division, and date range
+GET /api/attendance?studentId=8e8ef61b-5621-4c6f-9daa-89c029092e4c&subjectId=10&division=A&startDate=2026-10-01&endDate=2026-10-31
+
+# Paginated list
+GET /api/attendance?page=0&size=20&sort=id,desc
 ```
 
 ### Mark a lecture in bulk
@@ -215,6 +226,30 @@ Example response:
   "cWork": 1,
   "percentage": 83.33
 }
+```
+
+### Subject-wise attendance breakdown
+
+```http
+GET /api/attendance/summary/8e8ef61b-5621-4c6f-9daa-89c029092e4c/subjects
+```
+
+### Lecture attendance register
+
+```http
+GET /api/attendance/lecture/1/register
+```
+
+### Student attendance history
+
+```http
+GET /api/attendance/student/8e8ef61b-5621-4c6f-9daa-89c029092e4c/history?subjectId=10&startDate=2026-10-01&endDate=2026-10-31
+```
+
+### Attendance defaulters list
+
+```http
+GET /api/attendance/defaulters?threshold=75.0&division=A
 ```
 
 ## HTTP error behavior
