@@ -254,36 +254,189 @@ GET /api/attendance/defaulters?threshold=75.0&division=A
 
 ## Attendance Calendar & Trends
 
-The Attendance module tracks student attendance across lectures and provides calendar views, monthly summaries, and subject-wise attendance trends.
+The Attendance Management module provides student-facing and faculty analytics endpoints for calendar views, monthly summaries, and longitudinal subject-wise trends.
 
-### Technologies
-- Java 21 & Spring Boot 4
-- Spring Data JPA & PostgreSQL
-- Maven & JUnit 5
+### 1. Monthly Attendance Calendar
 
-### How to Run
-```bash
-./mvnw spring-boot:run
+Retrieves full day-by-day attendance records for a specified student and calendar month. Every day of the month is represented, containing either lecture attendance sessions or an empty day representation. Multiple lectures on the same date are grouped chronologically.
+
+```http
+GET /api/attendance/calendar/{studentId}?year=2026&month=10
 ```
 
-### Endpoints & Examples
-- **Monthly calendar:**
-  `GET /api/attendance/calendar/{studentId}?year=2026&month=10`
-  Returns day-by-day attendance for the specified student and month, including dates with no lectures.
-- **Monthly summary:**
-  `GET /api/attendance/calendar/{studentId}/summary?year=2026&month=10`
-  Returns monthly attendance statistics: total marked lectures, present count, absent count, college work count, and overall percentage.
-- **Subject trends:**
-  `GET /api/attendance/calendar/{studentId}/trends?startDate=2026-08-01&endDate=2026-10-31`
-  Returns attendance trends broken down by subject and month across the specified date range.
+Example response:
 
-### Attendance Percentage Formula
-$$\text{Attendance Percentage} = \frac{\text{Present} + \text{C\_WORK}}{\text{Total Marked Lectures}} \times 100$$
-*(Note: Evaluates safely to 0.0% when total marked lectures is 0).*
+```json
+{
+  "studentId": "8e8ef61b-5621-4c6f-9daa-89c029092e4c",
+  "studentName": "Alice Smith",
+  "enrollmentNo": "EN1001",
+  "year": 2026,
+  "month": 10,
+  "monthName": "OCTOBER",
+  "totalDaysInMonth": 31,
+  "activeAttendanceDays": 15,
+  "totalLectures": 30,
+  "presentCount": 25,
+  "absentCount": 3,
+  "cWorkCount": 2,
+  "attendancePercentage": 90.0,
+  "days": [
+    {
+      "date": "2026-10-01",
+      "dayOfMonth": 1,
+      "dayOfWeek": "THURSDAY",
+      "totalLectures": 0,
+      "presentCount": 0,
+      "absentCount": 0,
+      "cWorkCount": 0,
+      "entries": []
+    },
+    {
+      "date": "2026-10-05",
+      "dayOfMonth": 5,
+      "dayOfWeek": "MONDAY",
+      "totalLectures": 2,
+      "presentCount": 1,
+      "absentCount": 0,
+      "cWorkCount": 1,
+      "entries": [
+        {
+          "attendanceId": 101,
+          "lectureId": 1,
+          "lectureDate": "2026-10-05",
+          "startTime": "09:00:00",
+          "endTime": "10:00:00",
+          "subjectId": 10,
+          "subjectCode": "CS101",
+          "subjectName": "Data Structures",
+          "status": "Present",
+          "remarks": "On time",
+          "markedAt": "2026-10-05T09:05:00",
+          "markedBy": "prof@university.edu"
+        },
+        {
+          "attendanceId": 102,
+          "lectureId": 2,
+          "lectureDate": "2026-10-05",
+          "startTime": "11:00:00",
+          "endTime": "12:00:00",
+          "subjectId": 20,
+          "subjectCode": "MATH101",
+          "subjectName": "Discrete Mathematics",
+          "status": "C_WORK",
+          "remarks": "NSS Volunteering",
+          "markedAt": "2026-10-05T11:05:00",
+          "markedBy": "prof@university.edu"
+        }
+      ]
+    }
+  ]
+}
+```
 
-### Limitations
-- **Authorization:** Currently relies on the existing project configuration without role-based access control. In a production environment, requests should be restricted so students can only view their own attendance records.
+### 2. Monthly Attendance Summary
 
+Calculates aggregated monthly counts and attendance percentage using single-pass database aggregation.
+
+```http
+GET /api/attendance/calendar/{studentId}/summary?year=2026&month=10
+```
+
+Example response:
+
+```json
+{
+  "studentId": "8e8ef61b-5621-4c6f-9daa-89c029092e4c",
+  "studentName": "Alice Smith",
+  "enrollmentNo": "EN1001",
+  "year": 2026,
+  "month": 10,
+  "monthName": "OCTOBER",
+  "totalMarkedLectures": 30,
+  "presentCount": 25,
+  "absentCount": 3,
+  "cWorkCount": 2,
+  "attendancePercentage": 90.0,
+  "daysWithAttendance": 15
+}
+```
+
+### 3. Subject-wise Attendance Trends
+
+Calculates attendance statistics and monthly breakdowns grouped by subject across an arbitrary date range (spanning across month and year boundaries).
+
+```http
+GET /api/attendance/calendar/{studentId}/trends?startDate=2026-08-01&endDate=2026-10-31
+```
+
+Example response:
+
+```json
+{
+  "studentId": "8e8ef61b-5621-4c6f-9daa-89c029092e4c",
+  "studentName": "Alice Smith",
+  "enrollmentNo": "EN1001",
+  "startDate": "2026-08-01",
+  "endDate": "2026-10-31",
+  "overallTotalLectures": 60,
+  "overallAttendedLectures": 54,
+  "overallPercentage": 90.0,
+  "subjects": [
+    {
+      "subjectId": 10,
+      "subjectCode": "CS101",
+      "subjectName": "Data Structures",
+      "totalLectures": 30,
+      "presentCount": 25,
+      "absentCount": 3,
+      "cWorkCount": 2,
+      "attendancePercentage": 90.0,
+      "monthlyBreakdown": [
+        {
+          "year": 2026,
+          "month": 8,
+          "monthName": "AUGUST",
+          "totalLectures": 10,
+          "presentCount": 8,
+          "absentCount": 1,
+          "cWorkCount": 1,
+          "percentage": 90.0
+        },
+        {
+          "year": 2026,
+          "month": 9,
+          "monthName": "SEPTEMBER",
+          "totalLectures": 10,
+          "presentCount": 9,
+          "absentCount": 1,
+          "cWorkCount": 0,
+          "percentage": 90.0
+        },
+        {
+          "year": 2026,
+          "month": 10,
+          "monthName": "OCTOBER",
+          "totalLectures": 10,
+          "presentCount": 8,
+          "absentCount": 1,
+          "cWorkCount": 1,
+          "percentage": 90.0
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Business Rules & Calculation Details
+
+- **Supported Statuses:** `Present`, `Absent`, and `C_WORK` (College Work).
+- **Percentage Formula:**
+  $$\text{Percentage} = \frac{\text{Present} + \text{C\_WORK}}{\text{Total Marked Lectures}} \times 100$$
+  Rounded to 2 decimal places. When total lectures is 0, the percentage returns `0.0` safely.
+- **Lecture Date vs Record Creation Date:** Records are filtered strictly on scheduled lecture date (`Lecture.lectureDate`), NOT the database record creation or timestamp (`Attendance.markedAt`). Cancelled lectures (`status = 'Cancelled'`) are excluded.
+- **Authorization Limitation Note:** The current repository does not have Spring Security or JWT authentication infrastructure configured. Client-supplied student IDs are validated for existence in the database. When security is enabled, endpoints should verify that the authenticated principal matches the requested student ID or holds authorized faculty/administrative roles.
 
 ## HTTP error behavior
 
