@@ -523,14 +523,10 @@ class AttendanceServiceImplTest {
         a3.setStatus(AttendanceStatus.C_WORK);
         a3.setMarkedAt(LocalDateTime.of(2026, 10, 16, 10, 5));
 
-        List<Object[]> records = List.of(
-                new Object[]{a1, l1},
-                new Object[]{a2, l2},
-                new Object[]{a3, l3}
-        );
+        List<Object[]> records = List.of(new Object[] { a1, l1 }, new Object[] { a2, l2 }, new Object[] { a3, l3 });
 
-        when(attendanceRepository.findMonthlyAttendanceRecords(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
-                .thenReturn(records);
+        when(attendanceRepository.findMonthlyAttendanceRecords(sampleStudentId, LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 31))).thenReturn(records);
 
         Subject s1 = Subject.builder().id(501L).subjectCode("CS101").subjectName("Data Structures").build();
         Subject s2 = Subject.builder().id(502L).subjectCode("CS102").subjectName("Algorithms").build();
@@ -577,8 +573,8 @@ class AttendanceServiceImplTest {
     @Test
     void testGetMonthlyCalendar_EmptyMonth() {
         when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
-        when(attendanceRepository.findMonthlyAttendanceRecords(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
-                .thenReturn(Collections.emptyList());
+        when(attendanceRepository.findMonthlyAttendanceRecords(sampleStudentId, LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 31))).thenReturn(Collections.emptyList());
 
         MonthlyAttendanceCalendarResponse calendar = attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 10);
 
@@ -617,9 +613,9 @@ class AttendanceServiceImplTest {
     void testGetMonthlySummary_Success() {
         when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
 
-        Object[] aggRow = new Object[]{10L, 8L, 1L, 1L, 6L};
-        when(attendanceRepository.getMonthlySummaryAggregation(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
-                .thenReturn(Collections.singletonList(aggRow));
+        Object[] aggRow = new Object[] { 10L, 8L, 1L, 1L, 6L };
+        when(attendanceRepository.getMonthlySummaryAggregation(sampleStudentId, LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 31))).thenReturn(Collections.singletonList(aggRow));
 
         MonthlyAttendanceSummaryResponse summary = attendanceService.getMonthlySummary(sampleStudentId, 2026, 10);
 
@@ -636,9 +632,9 @@ class AttendanceServiceImplTest {
     void testGetMonthlySummary_ZeroRecords() {
         when(studentRepository.findById(sampleStudentId)).thenReturn(Optional.of(sampleStudent));
 
-        Object[] emptyRow = new Object[]{0L, null, null, null, 0L};
-        when(attendanceRepository.getMonthlySummaryAggregation(sampleStudentId, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
-                .thenReturn(Collections.singletonList(emptyRow));
+        Object[] emptyRow = new Object[] { 0L, null, null, null, 0L };
+        when(attendanceRepository.getMonthlySummaryAggregation(sampleStudentId, LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 31))).thenReturn(Collections.singletonList(emptyRow));
 
         MonthlyAttendanceSummaryResponse summary = attendanceService.getMonthlySummary(sampleStudentId, 2026, 10);
 
@@ -658,13 +654,13 @@ class AttendanceServiceImplTest {
         LocalDate startDate = LocalDate.of(2026, 8, 1);
         LocalDate endDate = LocalDate.of(2026, 10, 31);
 
-        Object[] subj1 = new Object[]{101L, 20L, 18L, 2L, 0L};
-        Object[] subj2 = new Object[]{102L, 10L, 7L, 2L, 1L};
+        Object[] subj1 = new Object[] { 101L, 20L, 18L, 2L, 0L };
+        Object[] subj2 = new Object[] { 102L, 10L, 7L, 2L, 1L };
         when(attendanceRepository.getSubjectTrendsAggregation(sampleStudentId, startDate, endDate))
                 .thenReturn(List.of(subj1, subj2));
 
-        Object[] m1 = new Object[]{101L, 2026, 8, 10L, 9L, 1L, 0L};
-        Object[] m2 = new Object[]{101L, 2026, 9, 10L, 9L, 1L, 0L};
+        Object[] m1 = new Object[] { 101L, 2026, 8, 10L, 9L, 1L, 0L };
+        Object[] m2 = new Object[] { 101L, 2026, 9, 10L, 9L, 1L, 0L };
         when(attendanceRepository.getSubjectMonthlyTrendsAggregation(sampleStudentId, startDate, endDate))
                 .thenReturn(List.of(m1, m2));
 

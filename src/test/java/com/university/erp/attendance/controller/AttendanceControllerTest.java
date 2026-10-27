@@ -223,24 +223,17 @@ class AttendanceControllerTest {
 
     @Test
     void testGetMonthlyCalendar_Success() throws Exception {
-        MonthlyAttendanceCalendarResponse calendarResponse = new MonthlyAttendanceCalendarResponse(
-                sampleStudentId, "Alice Smith", "EN1001", 2026, 10, "OCTOBER", 31, 15, 30L, 25L, 4L, 1L, 86.67, List.of()
-        );
+        MonthlyAttendanceCalendarResponse calendarResponse = new MonthlyAttendanceCalendarResponse(sampleStudentId,
+                "Alice Smith", "EN1001", 2026, 10, "OCTOBER", 31, 15, 30L, 25L, 4L, 1L, 86.67, List.of());
         when(attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 10)).thenReturn(calendarResponse);
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId)
-                        .param("year", "2026")
-                        .param("month", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.studentId").value(sampleStudentId.toString()))
-                .andExpect(jsonPath("$.studentName").value("Alice Smith"))
-                .andExpect(jsonPath("$.year").value(2026))
-                .andExpect(jsonPath("$.month").value(10))
-                .andExpect(jsonPath("$.monthName").value("OCTOBER"))
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId).param("year", "2026").param("month", "10"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.studentId").value(sampleStudentId.toString()))
+                .andExpect(jsonPath("$.studentName").value("Alice Smith")).andExpect(jsonPath("$.year").value(2026))
+                .andExpect(jsonPath("$.month").value(10)).andExpect(jsonPath("$.monthName").value("OCTOBER"))
                 .andExpect(jsonPath("$.totalDaysInMonth").value(31))
                 .andExpect(jsonPath("$.activeAttendanceDays").value(15))
-                .andExpect(jsonPath("$.totalLectures").value(30))
-                .andExpect(jsonPath("$.presentCount").value(25))
+                .andExpect(jsonPath("$.totalLectures").value(30)).andExpect(jsonPath("$.presentCount").value(25))
                 .andExpect(jsonPath("$.attendancePercentage").value(86.67));
     }
 
@@ -249,9 +242,7 @@ class AttendanceControllerTest {
         when(attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 13))
                 .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Month must be between 1 and 12"));
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId)
-                        .param("year", "2026")
-                        .param("month", "13"))
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId).param("year", "2026").param("month", "13"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Month must be between 1 and 12"));
     }
@@ -261,28 +252,22 @@ class AttendanceControllerTest {
         when(attendanceService.getMonthlyCalendar(sampleStudentId, 2026, 10))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found: " + sampleStudentId));
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId)
-                        .param("year", "2026")
-                        .param("month", "10"))
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId).param("year", "2026").param("month", "10"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Student not found: " + sampleStudentId));
     }
 
     @Test
     void testGetMonthlySummary_Success() throws Exception {
-        MonthlyAttendanceSummaryResponse summaryResponse = new MonthlyAttendanceSummaryResponse(
-                sampleStudentId, "Alice Smith", "EN1001", 2026, 10, "OCTOBER", 20L, 18L, 1L, 1L, 95.0, 10
-        );
+        MonthlyAttendanceSummaryResponse summaryResponse = new MonthlyAttendanceSummaryResponse(sampleStudentId,
+                "Alice Smith", "EN1001", 2026, 10, "OCTOBER", 20L, 18L, 1L, 1L, 95.0, 10);
         when(attendanceService.getMonthlySummary(sampleStudentId, 2026, 10)).thenReturn(summaryResponse);
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/summary")
-                        .param("year", "2026")
-                        .param("month", "10"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/summary").param("year", "2026")
+                .param("month", "10")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.studentId").value(sampleStudentId.toString()))
                 .andExpect(jsonPath("$.studentName").value("Alice Smith"))
-                .andExpect(jsonPath("$.totalMarkedLectures").value(20))
-                .andExpect(jsonPath("$.presentCount").value(18))
+                .andExpect(jsonPath("$.totalMarkedLectures").value(20)).andExpect(jsonPath("$.presentCount").value(18))
                 .andExpect(jsonPath("$.attendancePercentage").value(95.0))
                 .andExpect(jsonPath("$.daysWithAttendance").value(10));
     }
@@ -292,10 +277,8 @@ class AttendanceControllerTest {
         when(attendanceService.getMonthlySummary(sampleStudentId, 1800, 10))
                 .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Year must be between 1900 and 2200"));
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/summary")
-                        .param("year", "1800")
-                        .param("month", "10"))
-                .andExpect(status().isBadRequest())
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/summary").param("year", "1800")
+                .param("month", "10")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Year must be between 1900 and 2200"));
     }
 
@@ -304,18 +287,14 @@ class AttendanceControllerTest {
         LocalDate startDate = LocalDate.of(2026, 8, 1);
         LocalDate endDate = LocalDate.of(2026, 10, 31);
 
-        SubjectAttendanceTrend subj = new SubjectAttendanceTrend(
-                10L, "CS101", "Data Structures", 40L, 35L, 3L, 2L, 92.5, List.of()
-        );
-        AttendanceTrendsResponse trendsResponse = new AttendanceTrendsResponse(
-                sampleStudentId, "Alice Smith", "EN1001", startDate, endDate, 40L, 37L, 92.5, List.of(subj)
-        );
+        SubjectAttendanceTrend subj = new SubjectAttendanceTrend(10L, "CS101", "Data Structures", 40L, 35L, 3L, 2L,
+                92.5, List.of());
+        AttendanceTrendsResponse trendsResponse = new AttendanceTrendsResponse(sampleStudentId, "Alice Smith", "EN1001",
+                startDate, endDate, 40L, 37L, 92.5, List.of(subj));
         when(attendanceService.getAttendanceTrends(sampleStudentId, startDate, endDate)).thenReturn(trendsResponse);
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/trends")
-                        .param("startDate", "2026-08-01")
-                        .param("endDate", "2026-10-31"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/trends").param("startDate", "2026-08-01")
+                .param("endDate", "2026-10-31")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.studentId").value(sampleStudentId.toString()))
                 .andExpect(jsonPath("$.studentName").value("Alice Smith"))
                 .andExpect(jsonPath("$.overallTotalLectures").value(40))
@@ -333,10 +312,8 @@ class AttendanceControllerTest {
         when(attendanceService.getAttendanceTrends(sampleStudentId, startDate, endDate))
                 .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate cannot be after endDate"));
 
-        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/trends")
-                        .param("startDate", "2026-10-31")
-                        .param("endDate", "2026-08-01"))
-                .andExpect(status().isBadRequest())
+        mockMvc.perform(get("/api/attendance/calendar/" + sampleStudentId + "/trends").param("startDate", "2026-10-31")
+                .param("endDate", "2026-08-01")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("startDate cannot be after endDate"));
     }
 }

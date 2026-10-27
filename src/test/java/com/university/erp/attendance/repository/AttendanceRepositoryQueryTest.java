@@ -18,8 +18,8 @@ class AttendanceRepositoryQueryTest {
     @Test
     @DisplayName("findMonthlyAttendanceRecords has proper signature and JPQL query")
     void testFindMonthlyAttendanceRecordsQuery() throws Exception {
-        Method method = AttendanceRepository.class.getMethod("findMonthlyAttendanceRecords",
-                UUID.class, LocalDate.class, LocalDate.class);
+        Method method = AttendanceRepository.class.getMethod("findMonthlyAttendanceRecords", UUID.class,
+                LocalDate.class, LocalDate.class);
         assertNotNull(method);
 
         Query query = method.getAnnotation(Query.class);
@@ -43,8 +43,8 @@ class AttendanceRepositoryQueryTest {
     @Test
     @DisplayName("findByStudentIdAndLectureDateBetween has proper signature and JPQL query")
     void testFindByStudentIdAndLectureDateBetweenQuery() throws Exception {
-        Method method = AttendanceRepository.class.getMethod("findByStudentIdAndLectureDateBetween",
-                UUID.class, LocalDate.class, LocalDate.class);
+        Method method = AttendanceRepository.class.getMethod("findByStudentIdAndLectureDateBetween", UUID.class,
+                LocalDate.class, LocalDate.class);
         assertNotNull(method);
 
         Query query = method.getAnnotation(Query.class);
@@ -59,8 +59,8 @@ class AttendanceRepositoryQueryTest {
     @Test
     @DisplayName("getMonthlySummaryAggregation has proper signature and aggregation clauses")
     void testGetMonthlySummaryAggregationQuery() throws Exception {
-        Method method = AttendanceRepository.class.getMethod("getMonthlySummaryAggregation",
-                UUID.class, LocalDate.class, LocalDate.class);
+        Method method = AttendanceRepository.class.getMethod("getMonthlySummaryAggregation", UUID.class,
+                LocalDate.class, LocalDate.class);
         assertNotNull(method);
 
         Query query = method.getAnnotation(Query.class);
@@ -79,8 +79,8 @@ class AttendanceRepositoryQueryTest {
     @Test
     @DisplayName("getSubjectTrendsAggregation has proper signature and subject grouping")
     void testGetSubjectTrendsAggregationQuery() throws Exception {
-        Method method = AttendanceRepository.class.getMethod("getSubjectTrendsAggregation",
-                UUID.class, LocalDate.class, LocalDate.class);
+        Method method = AttendanceRepository.class.getMethod("getSubjectTrendsAggregation", UUID.class, LocalDate.class,
+                LocalDate.class);
         assertNotNull(method);
 
         Query query = method.getAnnotation(Query.class);
@@ -96,8 +96,8 @@ class AttendanceRepositoryQueryTest {
     @Test
     @DisplayName("getSubjectMonthlyTrendsAggregation has proper signature and month grouping")
     void testGetSubjectMonthlyTrendsAggregationQuery() throws Exception {
-        Method method = AttendanceRepository.class.getMethod("getSubjectMonthlyTrendsAggregation",
-                UUID.class, LocalDate.class, LocalDate.class);
+        Method method = AttendanceRepository.class.getMethod("getSubjectMonthlyTrendsAggregation", UUID.class,
+                LocalDate.class, LocalDate.class);
         assertNotNull(method);
 
         Query query = method.getAnnotation(Query.class);

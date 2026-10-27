@@ -171,11 +171,9 @@ public class AttendanceController {
     }
 
     @Operation(summary = "Get monthly attendance calendar", description = "Returns full day-by-day attendance calendar for a student and specified calendar month, including lecture details, statuses, and monthly totals.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Monthly calendar successfully retrieved"),
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Monthly calendar successfully retrieved"),
             @ApiResponse(responseCode = "400", description = "Invalid year or month specified"),
-            @ApiResponse(responseCode = "404", description = "Student not found")
-    })
+            @ApiResponse(responseCode = "404", description = "Student not found") })
     @GetMapping("/calendar/{studentId}")
     public ResponseEntity<MonthlyAttendanceCalendarResponse> getMonthlyCalendar(
             @Parameter(description = "Student UUID") @PathVariable UUID studentId,
@@ -185,11 +183,9 @@ public class AttendanceController {
     }
 
     @Operation(summary = "Get monthly attendance summary", description = "Calculates monthly attendance totals, status counts, percentage, and active days for a student in a specified month.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Monthly summary successfully retrieved"),
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Monthly summary successfully retrieved"),
             @ApiResponse(responseCode = "400", description = "Invalid year or month specified"),
-            @ApiResponse(responseCode = "404", description = "Student not found")
-    })
+            @ApiResponse(responseCode = "404", description = "Student not found") })
     @GetMapping("/calendar/{studentId}/summary")
     public ResponseEntity<MonthlyAttendanceSummaryResponse> getMonthlySummary(
             @Parameter(description = "Student UUID") @PathVariable UUID studentId,
@@ -199,11 +195,9 @@ public class AttendanceController {
     }
 
     @Operation(summary = "Get subject-wise attendance trends", description = "Analyzes subject-wise attendance metrics and chronological monthly trend breakdowns for a student over the requested date range.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Attendance trends report successfully retrieved"),
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Attendance trends report successfully retrieved"),
             @ApiResponse(responseCode = "400", description = "Invalid date range or missing required date parameters"),
-            @ApiResponse(responseCode = "404", description = "Student not found")
-    })
+            @ApiResponse(responseCode = "404", description = "Student not found") })
     @GetMapping("/calendar/{studentId}/trends")
     public ResponseEntity<AttendanceTrendsResponse> getAttendanceTrends(
             @Parameter(description = "Student UUID") @PathVariable UUID studentId,

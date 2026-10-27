@@ -391,15 +391,11 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         List<Object[]> records = repository.findMonthlyAttendanceRecords(studentId, startDate, endDate);
 
-        Set<Long> subjectIds = records.stream()
-                .map(r -> ((Lecture) r[1]).getSubjectId())
-                .filter(Objects::nonNull)
+        Set<Long> subjectIds = records.stream().map(r -> ((Lecture) r[1]).getSubjectId()).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
-                ? Collections.emptyMap()
-                : subjectRepository.findAllById(subjectIds).stream()
-                        .collect(Collectors.toMap(Subject::getId, s -> s));
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty() ? Collections.emptyMap()
+                : subjectRepository.findAllById(subjectIds).stream().collect(Collectors.toMap(Subject::getId, s -> s));
 
         Map<LocalDate, List<DailyAttendanceItem>> itemsByDate = new LinkedHashMap<>();
         for (Object[] row : records) {
@@ -409,20 +405,9 @@ public class AttendanceServiceImpl implements AttendanceService {
             String subjectName = s != null ? s.getSubjectName() : "Unknown";
             String subjectCode = s != null ? s.getSubjectCode() : null;
 
-            DailyAttendanceItem item = new DailyAttendanceItem(
-                    a.getId(),
-                    l.getId(),
-                    l.getLectureDate(),
-                    l.getStartTime(),
-                    l.getEndTime(),
-                    l.getSubjectId(),
-                    subjectCode,
-                    subjectName,
-                    a.getStatus(),
-                    a.getRemarks(),
-                    a.getMarkedAt(),
-                    a.getCreatedBy()
-            );
+            DailyAttendanceItem item = new DailyAttendanceItem(a.getId(), l.getId(), l.getLectureDate(),
+                    l.getStartTime(), l.getEndTime(), l.getSubjectId(), subjectCode, subjectName, a.getStatus(),
+                    a.getRemarks(), a.getMarkedAt(), a.getCreatedBy());
 
             itemsByDate.computeIfAbsent(l.getLectureDate(), k -> new ArrayList<>()).add(item);
         }
@@ -501,8 +486,8 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         double percentage = AttendanceCalendarValidator.calculatePercentage(present, cWork, total);
 
-        return new MonthlyAttendanceSummaryResponse(studentId, studentName, enrollmentNo, year, month, monthName,
-                total, present, absent, cWork, percentage, daysWithAttendance);
+        return new MonthlyAttendanceSummaryResponse(studentId, studentName, enrollmentNo, year, month, monthName, total,
+                present, absent, cWork, percentage, daysWithAttendance);
     }
 
     @Override
@@ -536,10 +521,8 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty()
-                ? Collections.emptyMap()
-                : subjectRepository.findAllById(subjectIds).stream()
-                        .collect(Collectors.toMap(Subject::getId, s -> s));
+        Map<Long, Subject> subjectMap = subjectIds.isEmpty() ? Collections.emptyMap()
+                : subjectRepository.findAllById(subjectIds).stream().collect(Collectors.toMap(Subject::getId, s -> s));
 
         Map<Long, List<MonthlySubjectAttendanceTrend>> monthlyBySubject = new LinkedHashMap<>();
         if (monthlyAgg != null) {
@@ -554,8 +537,8 @@ public class AttendanceServiceImpl implements AttendanceService {
                 double pct = AttendanceCalendarValidator.calculatePercentage(present, cWork, total);
                 String monthName = AttendanceCalendarValidator.getMonthName(month);
 
-                MonthlySubjectAttendanceTrend mTrend = new MonthlySubjectAttendanceTrend(
-                        year, month, monthName, total, present, absent, cWork, pct);
+                MonthlySubjectAttendanceTrend mTrend = new MonthlySubjectAttendanceTrend(year, month, monthName, total,
+                        present, absent, cWork, pct);
                 monthlyBySubject.computeIfAbsent(subjId, k -> new ArrayList<>()).add(mTrend);
             }
         }
@@ -582,11 +565,11 @@ public class AttendanceServiceImpl implements AttendanceService {
                 String subjectName = subject != null ? subject.getSubjectName() : "Unknown";
                 String subjectCode = subject != null ? subject.getSubjectCode() : null;
 
-                List<MonthlySubjectAttendanceTrend> monthlyBreakdown =
-                        monthlyBySubject.getOrDefault(subjId, Collections.emptyList());
+                List<MonthlySubjectAttendanceTrend> monthlyBreakdown = monthlyBySubject.getOrDefault(subjId,
+                        Collections.emptyList());
 
-                trends.add(new SubjectAttendanceTrend(
-                        subjId, subjectCode, subjectName, total, present, absent, cWork, pct, monthlyBreakdown));
+                trends.add(new SubjectAttendanceTrend(subjId, subjectCode, subjectName, total, present, absent, cWork,
+                        pct, monthlyBreakdown));
             }
         }
 
@@ -610,8 +593,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             return null;
         }
         return Stream.of(student.getFirstName(), student.getMiddleName(), student.getLastName())
-                .filter(s -> s != null && !s.isBlank())
-                .collect(Collectors.joining(" "));
+                .filter(s -> s != null && !s.isBlank()).collect(Collectors.joining(" "));
     }
 
     private Attendance find(Long id) {
