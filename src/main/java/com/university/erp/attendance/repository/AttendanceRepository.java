@@ -93,13 +93,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Object[]> findMonthlyAttendanceRecords(@Param("studentId") UUID studentId,
             @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT a FROM Attendance a, Lecture l WHERE a.lectureId = l.id " + "AND a.studentId = :studentId "
-            + "AND l.lectureDate >= :startDate AND l.lectureDate <= :endDate "
-            + "AND (l.status IS NULL OR LOWER(l.status) != 'cancelled') "
-            + "ORDER BY l.lectureDate ASC, l.startTime ASC, a.id ASC")
-    List<Attendance> findByStudentIdAndLectureDateBetween(@Param("studentId") UUID studentId,
-            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-
     @Query("SELECT COUNT(a), "
             + "SUM(CASE WHEN a.status = com.university.erp.attendance.entity.AttendanceStatus.Present THEN 1L ELSE 0L END), "
             + "SUM(CASE WHEN a.status = com.university.erp.attendance.entity.AttendanceStatus.Absent THEN 1L ELSE 0L END), "

@@ -391,11 +391,15 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         List<Object[]> records = repository.findMonthlyAttendanceRecords(studentId, startDate, endDate);
 
-        Set<Long> subjectIds = records.stream().map(r -> ((Lecture) r[1]).getSubjectId()).filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        Set<Long> subjectIds = new HashSet<>();
+        for (Object[] row : records) {
+            Lecture lecture = (Lecture) row[1];
+            if (lecture.getSubjectId() != null) {
+                subjectIds.add(lecture.getSubjectId());
+            }
+        }
 
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty() ? Collections.emptyMap()
-                : subjectRepository.findAllById(subjectIds).stream().collect(Collectors.toMap(Subject::getId, s -> s));
+        Map<Long, Subject> subjectMap = loadSubjectMap(subjectIds);
 
         Map<LocalDate, List<DailyAttendanceItem>> itemsByDate = new LinkedHashMap<>();
         for (Object[] row : records) {
@@ -521,8 +525,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
-        Map<Long, Subject> subjectMap = subjectIds.isEmpty() ? Collections.emptyMap()
-                : subjectRepository.findAllById(subjectIds).stream().collect(Collectors.toMap(Subject::getId, s -> s));
+        Map<Long, Subject> subjectMap = loadSubjectMap(subjectIds);
 
         Map<Long, List<MonthlySubjectAttendanceTrend>> monthlyBySubject = new LinkedHashMap<>();
         if (monthlyAgg != null) {
@@ -578,6 +581,16 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         return new AttendanceTrendsResponse(studentId, studentName, enrollmentNo, startDate, endDate, overallTotal,
                 overallAttended, overallPct, trends);
+    }
+
+    private Map<Long, Subject> loadSubjectMap(Set<Long> subjectIds) {
+        Map<Long, Subject> map = new HashMap<>();
+        if (subjectIds != null && !subjectIds.isEmpty()) {
+            for (Subject s : subjectRepository.findAllById(subjectIds)) {
+                map.put(s.getId(), s);
+            }
+        }
+        return map;
     }
 
     private Student findStudent(UUID studentId) {
