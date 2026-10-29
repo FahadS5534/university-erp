@@ -2,7 +2,6 @@ package com.university.erp.classroom.entity;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.university.erp.course.entity.Subject;
 import lombok.*;
 import java.time.*;
 import java.util.UUID;
@@ -18,11 +17,7 @@ public class Timetable {
     @Column(name = "timetable_id")
     private Long id;
     @Column(name = "subject_id", nullable = false)
-    private Long subjectId;
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "subject_id", insertable = false, updatable = false)
-    private Subject subject;
+    private UUID subjectId;
     @Column(name = "division_id", nullable = false)
     private UUID divisionId;
     @Column(name = "day_of_week", nullable = false)

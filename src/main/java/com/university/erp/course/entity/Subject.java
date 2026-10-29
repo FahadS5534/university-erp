@@ -37,7 +37,7 @@ public class Subject {
     @Column(nullable = false)
     private Short credits;
 
-    @Column(name = "subejct_type", nullable = false)
+    @Column(name = "subject_type", nullable = false)
     private String subjectType;
 
     @Column(name = "subject_hours", nullable = false)
